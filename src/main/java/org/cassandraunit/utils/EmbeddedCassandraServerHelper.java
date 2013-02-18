@@ -93,22 +93,21 @@ public class EmbeddedCassandraServerHelper {
         }
 
         cleanupAndLeaveDirs();
-        final CountDownLatch startupLatch = new CountDownLatch(1);
         executor = Executors.newSingleThreadExecutor();
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 cassandraDaemon = new CassandraDaemon();
                 cassandraDaemon.activate();
-                startupLatch.countDown();
             }
         });
-        try {
-            startupLatch.await(10, SECONDS);
-        } catch (InterruptedException e) {
-            log.error("Interrupted waiting for Cassandra daemon to start:", e);
-            throw new AssertionError(e);
-        }
+        executor.shutdown();
+		try {
+			executor.awaitTermination(10, SECONDS);
+		} catch (InterruptedException e) {
+			  log.error("Interrupted waiting for Cassandra daemon to start:", e);
+	            throw new AssertionError(e);
+		}
     }
 
     private static void checkConfigNameForRestart(String yamlFile) {
